@@ -74,7 +74,9 @@ export async function updateIncidentStatus(id, status) {
 }
 
 export async function deleteIncident(id) {
-  const response = await fetch(`${API_BASE}/incidents/${id}`);
+  const response = await fetch(`${API_BASE}/incidents/${id}`, {
+    method: 'DELETE'
+  });
   if (!response.ok) {
     throw new Error('Failed to delete incident');
   }
@@ -91,4 +93,32 @@ export async function getAnalytics() {
 
 export function getReportDownloadUrl(id) {
   return `${API_BASE}/reports/${id}`;
+}
+
+// ML API Client Methods
+export async function getMLStatus() {
+  const response = await fetch(`${API_BASE}/ml/status`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch ML model status');
+  }
+  return await response.json();
+}
+
+export async function getFeatureImportance() {
+  const response = await fetch(`${API_BASE}/ml/feature-importance`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch ML feature importances');
+  }
+  return await response.json();
+}
+
+export async function retrainModel() {
+  const response = await fetch(`${API_BASE}/ml/retrain`, {
+    method: 'POST'
+  });
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.detail || 'Model retraining failed');
+  }
+  return await response.json();
 }

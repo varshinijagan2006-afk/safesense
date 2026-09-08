@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, FileText, Calendar, MapPin, Building2, CheckCircle2, AlertTriangle, Shield, Download } from 'lucide-react';
+import { X, FileText, Calendar, MapPin, Building2, CheckCircle2, AlertTriangle, Shield, Download, BrainCircuit, Scale } from 'lucide-react';
 import SeverityBadge from './SeverityBadge';
 import RiskGauge from './RiskGauge';
 import { updateIncidentStatus, getReportDownloadUrl } from '../services/api';
@@ -23,6 +23,10 @@ export default function IncidentModal({ incident, onClose, onStatusUpdated }) {
     }
   };
 
+  const isRealData = incident.data_source === 'REAL' || !incident.data_source;
+  const ruleScore = incident.rule_based_score ?? incident.risk_score;
+  const mlScore = incident.ml_prediction?.ml_predicted_score ?? incident.risk_score;
+
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-[#0F172A] border border-slate-800 rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
@@ -32,11 +36,15 @@ export default function IncidentModal({ incident, onClose, onStatusUpdated }) {
             <span className="text-xs font-mono font-bold text-amber-400 px-2.5 py-1 bg-amber-500/10 border border-amber-500/30 rounded-md">
               {incident.id}
             </span>
+            <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold border ${
+              isRealData ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-sky-500/10 text-sky-400 border-sky-500/30'
+            }`}>
+              {isRealData ? 'REAL DB INCIDENT' : 'SYNTHETIC RECORD'}
+            </span>
             <SeverityBadge severity={incident.severity} />
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Download PDF button */}
             <a
               href={getReportDownloadUrl(incident.id)}
               download
@@ -105,15 +113,37 @@ export default function IncidentModal({ incident, onClose, onStatusUpdated }) {
             </div>
           </div>
 
+          {/* Hybrid Score Breakdown Panel */}
+          <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+              <Scale className="w-4 h-4" />
+              Hybrid Score Weights (60% Rule / 40% ML)
+            </h4>
+            <div className="grid grid-cols-3 gap-2 text-center text-xs">
+              <div className="p-2 rounded bg-slate-950/80 border border-slate-800">
+                <span className="text-[10px] text-slate-400 block">Rule Score</span>
+                <span className="font-mono font-bold text-sky-400">{ruleScore}</span>
+              </div>
+              <div className="p-2 rounded bg-slate-950/80 border border-slate-800">
+                <span className="text-[10px] text-slate-400 block">ML Score</span>
+                <span className="font-mono font-bold text-amber-400">{mlScore}</span>
+              </div>
+              <div className="p-2 rounded bg-amber-500/10 border border-amber-500/30">
+                <span className="text-[10px] text-amber-300 block font-bold">Blended Score</span>
+                <span className="font-mono font-extrabold text-slate-100">{incident.risk_score}</span>
+              </div>
+            </div>
+          </div>
+
           {/* AI Rationale Box */}
           <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
                 <AlertTriangle className="w-4 h-4" />
-                Explainable AI Rationale
+                Explainable Hybrid AI Rationale
               </span>
               <span className="text-[11px] text-slate-400">
-                Confidence: <b className="text-amber-400">{incident.confidence || 85}%</b>
+                Model Confidence: <b className="text-amber-400">{incident.ml_confidence ? `${Math.round(incident.ml_confidence * 100)}%` : `${incident.confidence || 85}%`}</b>
               </span>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed">

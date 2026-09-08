@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Dict
 from datetime import datetime
 
 class AnalyzeRequest(BaseModel):
@@ -25,6 +25,13 @@ class AnalyzeResponse(BaseModel):
     immediate_actions: List[str]
     preventive_actions: List[str]
     confidence: int
+    
+    # Hybrid AI Extensions
+    rule_based_score: Optional[int] = None
+    ml_predicted_score: Optional[int] = None
+    ml_severity: Optional[str] = None
+    ml_confidence: Optional[float] = None
+    prediction_source: Optional[str] = "hybrid"
 
 class IncidentCreate(BaseModel):
     description: str
@@ -43,6 +50,13 @@ class IncidentCreate(BaseModel):
     injury_reported: Optional[bool] = False
     status: Optional[str] = "Pending"
     created_at: Optional[str] = None
+
+    # Hybrid AI Extensions
+    data_source: Optional[str] = "REAL"
+    ml_prediction: Optional[Dict[str, Any]] = None
+    ml_confidence: Optional[float] = None
+    model_version: Optional[str] = "1.0.0"
+    rule_based_score: Optional[int] = None
 
 class IncidentStatusUpdate(BaseModel):
     status: str
@@ -66,6 +80,13 @@ class IncidentResponse(BaseModel):
     status: str
     created_at: str
 
+    # Hybrid AI Extensions
+    data_source: Optional[str] = "REAL"
+    ml_prediction: Optional[Any] = None
+    ml_confidence: Optional[float] = None
+    model_version: Optional[str] = "1.0.0"
+    rule_based_score: Optional[int] = None
+
     class Config:
         from_attributes = True
 
@@ -78,3 +99,29 @@ class LoginResponse(BaseModel):
     token: str
     user: dict
     message: Optional[str] = None
+
+# ML API Schemas
+class MLStatusResponse(BaseModel):
+    model_available: bool
+    model_version: str
+    training_records: int
+    real_records: int
+    synthetic_records: int
+    accuracy: float
+    f1_score: float
+    mae: float
+    last_trained: str
+    learning_enabled: bool
+
+class FeatureImportanceItem(BaseModel):
+    feature: str
+    importance: float
+
+class FeatureImportanceResponse(BaseModel):
+    model_version: str
+    top_features: List[FeatureImportanceItem]
+
+class RetrainResponse(BaseModel):
+    success: bool
+    message: str
+    metadata: Dict[str, Any]

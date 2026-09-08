@@ -1,5 +1,5 @@
 import os
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -20,3 +20,31 @@ def get_db():
         yield db
     finally:
         db.close()
+
+def migrate_sqlite_schema():
+    """Safely adds missing columns to SQLite database without wiping existing data."""
+    if not os.path.exists(DB_PATH):
+        return
+
+    with engine.connect() as conn:
+        # Check columns in incidents table
+        res = conn.execute(text("PRAGMA table_info(incidents);")).fetchall()
+        existing_cols = {row[1] for row in res} if res else set()
+
+        if existing_cols:
+            new_cols = [
+                ("data_source", "VARCHAR(20) DEFAULT 'REAL'"),
+                ("ml_prediction", "TEXT"),
+                ("ml_confidence", "FLOAT"),
+                ("model_version", "VARCHAR(20) DEFAULT '1.0.0'"),
+                ("rule_based_score", "INTEGER")
+            ]
+
+            for col_name, col_type in new_cols:
+                if col_name not in existing_cols:
+                    try:
+                        conn.execute(text(f"ALTER TABLE incidents ADD COLUMN {col_name} {col_type};"))
+                        print(f"[MIGRATION] Added missing column '{col_name}' to incidents table.")
+                    except Exception as e:
+                        print(f"[MIGRATION] Column addition '{col_name}' skipped: {e}")
+            conn.commit()

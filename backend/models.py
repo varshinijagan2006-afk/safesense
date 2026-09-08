@@ -1,6 +1,6 @@
 import datetime
 import json
-from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, JSON
+from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, Float, JSON
 from backend.database import Base
 
 class User(Base):
@@ -35,4 +35,12 @@ class Incident(Base):
     people_affected = Column(Integer, default=0)
     injury_reported = Column(Boolean, default=False)
     status = Column(String(50), default="Pending")
+
+    # Hybrid AI Extensions
+    data_source = Column(String(20), default="REAL")
+    ml_prediction = Column(JSON, nullable=True)
+    ml_confidence = Column(Float, nullable=True)
+    model_version = Column(String(20), default="1.0.0")
+    rule_based_score = Column(Integer, nullable=True)
+
     created_at = Column(DateTime, default=datetime.datetime.utcnow)

@@ -11,7 +11,9 @@ import {
   ShieldAlert,
   Loader2,
   FileCheck,
-  Zap
+  Zap,
+  BrainCircuit,
+  Scale
 } from 'lucide-react';
 
 import RiskGauge from '../components/RiskGauge';
@@ -113,11 +115,21 @@ export default function Analyzer() {
         confidence: result.confidence,
         people_affected: Number(peopleAffected) || 0,
         injury_reported: injuryReported,
-        status: 'Pending'
+        status: 'Pending',
+
+        // Hybrid AI Extensions
+        data_source: 'REAL',
+        ml_prediction: {
+          ml_predicted_score: result.ml_predicted_score,
+          ml_severity: result.ml_severity
+        },
+        ml_confidence: result.ml_confidence,
+        model_version: '1.0.0',
+        rule_based_score: result.rule_based_score
       });
 
       setSaved(true);
-      setToast({ message: `Incident ${savedRes.id} saved successfully to database!`, type: 'success' });
+      setToast({ message: `Incident ${savedRes.id} saved to database!`, type: 'success' });
     } catch (err) {
       setToast({ message: err.message || 'Failed to save incident', type: 'error' });
     } finally {
@@ -142,7 +154,7 @@ export default function Analyzer() {
           AI Incident Analyzer
         </h1>
         <p className="text-xs text-slate-400 mt-1">
-          Submit workplace incident descriptions for real-time explainable risk assessment and action recommendation
+          Submit workplace incident descriptions for real-time explainable hybrid risk assessment (60% Rule Policy + 40% Random Forest ML)
         </p>
       </div>
 
@@ -300,12 +312,12 @@ export default function Analyzer() {
               {analyzing ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Analyzing Incident...</span>
+                  <span>Analyzing Hybrid Risk Vectors...</span>
                 </>
               ) : (
                 <>
                   <Sparkles className="w-4 h-4 stroke-[2.5]" />
-                  <span>Analyze Incident</span>
+                  <span>Analyze Hybrid Incident</span>
                 </>
               )}
             </button>
@@ -319,9 +331,9 @@ export default function Analyzer() {
               <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 mb-4">
                 <Cpu className="w-8 h-8" />
               </div>
-              <h3 className="text-base font-bold text-slate-200">Ready for Risk Assessment</h3>
+              <h3 className="text-base font-bold text-slate-200">Ready for Hybrid Risk Assessment</h3>
               <p className="text-xs text-slate-400 max-w-sm mt-1">
-                Enter incident details or select a demo scenario on the left, then click "Analyze Incident" to launch the rule-based explainable AI risk engine.
+                Enter incident details or select a demo scenario on the left, then click "Analyze Hybrid Incident" to launch the rule engine and Random Forest ML predictor.
               </p>
             </div>
           )}
@@ -329,9 +341,9 @@ export default function Analyzer() {
           {analyzing && (
             <div className="glass-panel p-12 rounded-2xl border border-slate-800 flex flex-col items-center justify-center text-center h-full min-h-[400px]">
               <Loader2 className="w-10 h-10 text-amber-500 animate-spin mb-4" />
-              <h3 className="text-base font-bold text-slate-200">Analyzing Incident Vectors...</h3>
+              <h3 className="text-base font-bold text-slate-200">Running Hybrid AI Evaluation...</h3>
               <p className="text-xs text-slate-400 mt-1">
-                Scanning keywords, calculating hazard risk score weights, evaluating severity, and drafting recommendations...
+                Parsing keywords, vectorizing TF-IDF description, predicting Random Forest score &amp; blending 60/40 rule weights...
               </p>
             </div>
           )}
@@ -341,8 +353,9 @@ export default function Analyzer() {
               {/* Result Header */}
               <div className="flex items-center justify-between border-b border-slate-800 pb-4">
                 <div>
-                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-500">
-                    Incident AI Risk Assessment
+                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-500 flex items-center gap-1">
+                    <BrainCircuit className="w-3.5 h-3.5" />
+                    Hybrid AI Assessment Result
                   </span>
                   <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
                     Category: <span className="text-amber-400">{result.category}</span>
@@ -350,11 +363,42 @@ export default function Analyzer() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="text-right">
-                    <span className="text-[10px] uppercase text-slate-400 block font-semibold">Analysis Reliability</span>
-                    <span className="text-xs font-mono font-bold text-amber-400">{result.confidence}%</span>
-                  </div>
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold border uppercase ${
+                    result.prediction_source === 'hybrid'
+                      ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                      : 'bg-sky-500/10 text-sky-400 border-sky-500/30'
+                  }`}>
+                    {result.prediction_source === 'hybrid' ? 'Hybrid (Rule + ML)' : 'Rule Engine Fallback'}
+                  </span>
                   <SeverityBadge severity={result.severity} />
+                </div>
+              </div>
+
+              {/* Hybrid Score Breakdown Card */}
+              <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                  <Scale className="w-4 h-4 text-amber-400" />
+                  Hybrid Risk Score Breakdown
+                </h4>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="p-3 rounded-lg bg-slate-950/80 border border-slate-800 text-center">
+                    <span className="text-[10px] text-slate-400 uppercase font-semibold block">Rule Policy Base</span>
+                    <span className="text-lg font-mono font-bold text-sky-400">{result.rule_based_score ?? result.risk_score}</span>
+                    <span className="text-[10px] text-slate-500 block">Weight: 60%</span>
+                  </div>
+
+                  <div className="p-3 rounded-lg bg-slate-950/80 border border-slate-800 text-center">
+                    <span className="text-[10px] text-slate-400 uppercase font-semibold block">Random Forest ML</span>
+                    <span className="text-lg font-mono font-bold text-amber-400">{result.ml_predicted_score ?? result.risk_score}</span>
+                    <span className="text-[10px] text-slate-500 block">Weight: 40% ({result.ml_severity || result.severity})</span>
+                  </div>
+
+                  <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-center">
+                    <span className="text-[10px] text-amber-400 uppercase font-bold block">Final Blended Score</span>
+                    <span className="text-2xl font-mono font-extrabold text-slate-50">{result.risk_score}</span>
+                    <span className="text-[10px] text-amber-300 block font-semibold">{result.severity}</span>
+                  </div>
                 </div>
               </div>
 
@@ -365,7 +409,12 @@ export default function Analyzer() {
                 </div>
                 
                 <div className="sm:col-span-2 space-y-2 flex flex-col justify-center">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Detected Hazards</h4>
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Detected Hazards</h4>
+                    <span className="text-[11px] text-slate-400">
+                      ML Confidence: <b className="text-amber-400">{result.ml_confidence ? `${Math.round(result.ml_confidence*100)}%` : `${result.confidence}%`}</b>
+                    </span>
+                  </div>
                   <div className="flex flex-wrap gap-1.5">
                     {result.hazards.map((h, i) => (
                       <span key={i} className="px-2.5 py-1 rounded-md bg-slate-800 text-slate-200 text-xs font-medium border border-slate-700 flex items-center gap-1">
@@ -381,44 +430,11 @@ export default function Analyzer() {
               <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-2">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
                   <AlertTriangle className="w-4 h-4" />
-                  WHY THIS SCORE? (Explainable AI Rationale)
+                  WHY THIS SCORE? (Explainable Hybrid Rationale)
                 </h3>
                 <p className="text-xs text-slate-200 leading-relaxed font-normal">
                   {result.explanation}
                 </p>
-              </div>
-
-              {/* Risk Factors Breakdown Table */}
-              <div>
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-                  Risk Factors Impact Matrix
-                </h3>
-                <div className="overflow-x-auto rounded-xl border border-slate-800">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-900 text-slate-400 font-semibold border-b border-slate-800">
-                      <tr>
-                        <th className="p-2.5">Factor</th>
-                        <th className="p-2.5">Impact</th>
-                        <th className="p-2.5 text-right">Contribution</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800/60 text-slate-300">
-                      {result.risk_factors.map((rf, i) => (
-                        <tr key={i} className="hover:bg-slate-800/40">
-                          <td className="p-2.5 font-medium">{rf.factor}</td>
-                          <td className="p-2.5">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                              rf.impact === 'High' ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-amber-500/10 text-amber-300 border border-amber-500/20'
-                            }`}>
-                              {rf.impact}
-                            </span>
-                          </td>
-                          <td className="p-2.5 text-right font-mono font-bold text-amber-400">+{rf.points} pts</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
               </div>
 
               {/* Actions Grid */}
@@ -472,7 +488,7 @@ export default function Analyzer() {
                   {saved ? (
                     <>
                       <FileCheck className="w-4 h-4" />
-                      <span>Incident Saved to Database</span>
+                      <span>Saved to SQLite (Tagged as REAL Data)</span>
                     </>
                   ) : (
                     <>

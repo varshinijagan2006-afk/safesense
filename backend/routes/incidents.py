@@ -37,6 +37,11 @@ def format_incident(inc: Incident) -> dict:
         try: prev_actions = json.loads(prev_actions)
         except: prev_actions = [prev_actions]
 
+    ml_pred = inc.ml_prediction
+    if isinstance(ml_pred, str):
+        try: ml_pred = json.loads(ml_pred)
+        except: ml_pred = None
+
     created_at_str = inc.created_at.strftime("%Y-%m-%d %H:%M:%S") if isinstance(inc.created_at, datetime.datetime) else str(inc.created_at)
 
     return {
@@ -56,7 +61,14 @@ def format_incident(inc: Incident) -> dict:
         "people_affected": inc.people_affected or 0,
         "injury_reported": bool(inc.injury_reported),
         "status": inc.status or "Pending",
-        "created_at": created_at_str
+        "created_at": created_at_str,
+
+        # Hybrid AI Extensions
+        "data_source": inc.data_source or "REAL",
+        "ml_prediction": ml_pred,
+        "ml_confidence": inc.ml_confidence,
+        "model_version": inc.model_version or "1.0.0",
+        "rule_based_score": inc.rule_based_score or inc.risk_score
     }
 
 @router.post("/analyze", response_model=AnalyzeResponse)
@@ -75,7 +87,6 @@ def create_incident(req: IncidentCreate, db: Session = Depends(get_db)):
     inc_count = db.query(Incident).count() + 1
     inc_id = f"INC-2026-{inc_count:03d}"
     
-    # Check if custom ID was provided or collision
     if db.query(Incident).filter(Incident.id == inc_id).first():
         inc_id = f"INC-2026-{uuid.uuid4().hex[:4].upper()}"
 
@@ -96,7 +107,14 @@ def create_incident(req: IncidentCreate, db: Session = Depends(get_db)):
         people_affected=req.people_affected or 0,
         injury_reported=req.injury_reported or False,
         status=req.status or "Pending",
-        created_at=datetime.datetime.utcnow()
+        created_at=datetime.datetime.utcnow(),
+
+        # Hybrid AI Extensions
+        data_source=req.data_source or "REAL",
+        ml_prediction=req.ml_prediction,
+        ml_confidence=req.ml_confidence,
+        model_version=req.model_version or "1.0.0",
+        rule_based_score=req.rule_based_score or req.risk_score
     )
 
     db.add(incident)

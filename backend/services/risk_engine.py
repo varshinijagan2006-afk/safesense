@@ -1,5 +1,6 @@
 import re
 from typing import Dict, List, Any
+from backend.ml.predictor import compute_hybrid_risk_assessment
 
 KEYWORDS = {
     "CHEMICAL": {
@@ -154,7 +155,7 @@ def analyze_incident_text(
     total_score = 0
     matched_categories = []
 
-    # 1. Keyword analysis
+    # 1. Rule-Based Keyword analysis
     for key, data in KEYWORDS.items():
         found = False
         for kw in data["words"]:
@@ -205,7 +206,6 @@ def analyze_incident_text(
         })
         hazards.append("Worker injury reported")
 
-    # Multiple hazard bonus
     if len(matched_categories) >= 2:
         total_score += 10
         risk_factors.append({
@@ -214,7 +214,6 @@ def analyze_incident_text(
             "points": 10
         })
 
-    # Location risk adjustment
     loc_lower = location.lower()
     high_risk_locs = ["storage", "chemical", "laboratory", "lab", "boiler", "substation", "high voltage", "warehouse"]
     if any(hl in loc_lower for hl in high_risk_locs):
@@ -225,11 +224,10 @@ def analyze_incident_text(
             "points": 5
         })
 
-    # Clamp score
-    final_score = min(100, max(0, total_score))
-    if final_score == 0:
-        # Default baseline score if text is very vague
-        final_score = 15
+    # Rule-based score clamping
+    rule_score = min(100, max(0, total_score))
+    if rule_score == 0:
+        rule_score = 15
         risk_factors.append({
             "factor": "General Hazard Baseline",
             "impact": "Low",
@@ -238,41 +236,34 @@ def analyze_incident_text(
         hazards.append("Unspecified workplace concern")
 
     # Severity classification
-    if final_score >= 75:
+    if rule_score >= 75:
         severity = "CRITICAL"
-    elif final_score >= 55:
+    elif rule_score >= 55:
         severity = "HIGH"
-    elif final_score >= 30:
+    elif rule_score >= 30:
         severity = "MEDIUM"
     else:
         severity = "LOW"
 
-    # Category determination
     if matched_categories:
         category = " + ".join(matched_categories)
     else:
         category = "Other Safety Hazard"
 
-    # Generate Natural Language Explanation
     explanation_parts = []
     if "CRITICAL" in severity or "HIGH" in severity:
-        explanation_parts.append(f"The incident was classified as {severity} risk (Score: {final_score}/100) due to critical threat indicators.")
+        explanation_parts.append(f"Safety rule policy categorized this incident as {severity} risk ({rule_score}/100 base score).")
     else:
-        explanation_parts.append(f"The incident was assessed with a {severity} severity risk score of {final_score}/100.")
+        explanation_parts.append(f"Safety rule policy assigned a {severity} baseline risk score of {rule_score}/100.")
 
     if matched_categories:
-        explanation_parts.append(f"Primary hazard vectors detected include {', '.join(matched_categories)}.")
+        explanation_parts.append(f"Primary hazard vectors: {', '.join(matched_categories)}.")
     
     if injury_reported or "INJURY" in detected_keys or "SEVERE_INJURY" in detected_keys:
-        explanation_parts.append("The presence of physical worker trauma significantly elevates the urgency and potential impact rating.")
-    
-    if len(matched_categories) >= 2:
-        explanation_parts.append("The simultaneous occurrence of multiple distinct hazards creates a dangerous compound risk environment.")
+        explanation_parts.append("Worker injury presence elevates risk priority.")
 
-    explanation_parts.append(f"Location '{location}' ({department} dept) requires tailored containment protocols.")
-    explanation = " ".join(explanation_parts)
+    rule_explanation = " ".join(explanation_parts)
 
-    # Actions compilation
     immediate_actions = []
     preventive_actions = []
     
@@ -291,18 +282,34 @@ def analyze_incident_text(
     if not preventive_actions:
         preventive_actions = DEFAULT_PREVENTIVE.copy()
 
-    # Heuristic confidence calculation
     signal_count = len(detected_keys) + (1 if people_affected > 0 else 0) + (1 if injury_reported else 0)
     confidence = min(98, max(70, 72 + (signal_count * 5) + (8 if len(description) > 50 else 0)))
 
-    return {
-        "risk_score": final_score,
+    rule_result = {
+        "risk_score": rule_score,
         "severity": severity,
         "category": category,
         "hazards": hazards,
         "risk_factors": risk_factors,
-        "explanation": explanation,
+        "explanation": rule_explanation,
         "immediate_actions": immediate_actions[:5],
         "preventive_actions": preventive_actions[:5],
-        "confidence": confidence
+        "confidence": confidence,
+        "rule_based_score": rule_score,
+        "ml_predicted_score": rule_score,
+        "ml_severity": severity,
+        "ml_confidence": float(confidence) / 100.0,
+        "prediction_source": "rule_based"
     }
+
+    # 3. Combine with ML prediction via Hybrid Risk Predictor
+    hybrid_result = compute_hybrid_risk_assessment(
+        rule_result=rule_result,
+        description=description,
+        location=location,
+        department=department,
+        people_affected=people_affected,
+        injury_reported=injury_reported
+    )
+
+    return hybrid_result
