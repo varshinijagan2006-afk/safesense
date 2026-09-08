@@ -197,16 +197,23 @@ def review_incident(incident_id: str, review_req: IncidentReviewRequest, db: Ses
     if not inc:
         raise HTTPException(status_code=404, detail="Incident not found")
 
-    inc.verified = review_req.verified
+    inc.verified = True
+    
+    # Ground truth mapping:
+    # If explicit verified_severity passed, use it (reviewer provided actual or confirmed prediction)
     if review_req.verified_severity:
         inc.verified_severity = review_req.verified_severity
     else:
-        inc.verified_severity = inc.severity
+        # Fallback to model prediction severity or incident severity
+        ml_sev = inc.ml_prediction.get("ml_severity") if isinstance(inc.ml_prediction, dict) else None
+        inc.verified_severity = ml_sev or inc.severity
 
     if review_req.verified_risk_score is not None:
         inc.verified_risk_score = review_req.verified_risk_score
     else:
-        inc.verified_risk_score = inc.risk_score
+        # Fallback to model prediction risk score or incident risk score
+        ml_score = inc.ml_prediction.get("ml_predicted_score") if isinstance(inc.ml_prediction, dict) else None
+        inc.verified_risk_score = ml_score if ml_score is not None else inc.risk_score
 
     inc.reviewed_at = datetime.datetime.utcnow()
 

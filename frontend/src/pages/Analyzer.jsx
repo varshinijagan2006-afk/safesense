@@ -166,9 +166,9 @@ export default function Analyzer() {
     try {
       const isCorrect = reviewChoice === 'correct';
       await reviewIncident(idToReview, {
-        verified: isCorrect,
-        verified_severity: isCorrect ? result.severity : actualSeverity,
-        verified_risk_score: isCorrect ? result.risk_score : Number(actualScore)
+        verified: true,
+        verified_severity: isCorrect ? (result.ml_severity || result.severity) : actualSeverity,
+        verified_risk_score: isCorrect ? (result.ml_predicted_score !== undefined ? result.ml_predicted_score : result.risk_score) : Number(actualScore)
       });
       setReviewSaved(true);
       setToast({ message: 'Safety review recorded successfully.', type: 'success' });

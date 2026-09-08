@@ -27,41 +27,37 @@ def run_training_pipeline(db_incidents_list: list = None, model_version: str = "
         for item in db_incidents_list:
             is_verified = item.get("verified", False)
             
-            # Extract ground-truth labels (NEVER train on unverified ML output)
+            # Ground-truth enforcement: ONLY REAL_VERIFIED records contribute supervised target labels
             if is_verified:
                 real_verified_count += 1
                 source_tag = "REAL_VERIFIED"
                 target_severity = item.get("verified_severity") or item.get("severity")
                 target_score = item.get("verified_risk_score") if item.get("verified_risk_score") is not None else item.get("risk_score")
+
+                processed_real_records.append({
+                    "id": item.get("id"),
+                    "description": item.get("description", ""),
+                    "location": item.get("location", "Main Site"),
+                    "department": item.get("department", "Manufacturing"),
+                    "category": item.get("category", "Other"),
+                    "people_affected": item.get("people_affected", 0),
+                    "injury_reported": item.get("injury_reported", False),
+                    "hazards": item.get("hazards", []),
+                    "hazard_count": len(item.get("hazards", [])) if item.get("hazards") else 1,
+                    "rule_based_score": item.get("rule_based_score") or item.get("risk_score", 50),
+                    "risk_score": float(target_score),
+                    "severity": str(target_severity),
+                    "data_source": source_tag
+                })
             else:
                 real_unverified_count += 1
-                source_tag = "REAL_UNVERIFIED"
-                target_severity = item.get("severity")
-                target_score = item.get("rule_based_score") or item.get("risk_score")
 
-            processed_real_records.append({
-                "id": item.get("id"),
-                "description": item.get("description", ""),
-                "location": item.get("location", "Main Site"),
-                "department": item.get("department", "Manufacturing"),
-                "category": item.get("category", "Other"),
-                "people_affected": item.get("people_affected", 0),
-                "injury_reported": item.get("injury_reported", False),
-                "hazards": item.get("hazards", []),
-                "hazard_count": len(item.get("hazards", [])) if item.get("hazards") else 1,
-                "rule_based_score": item.get("rule_based_score") or item.get("risk_score", 50),
-                "risk_score": float(target_score),
-                "severity": str(target_severity),
-                "data_source": source_tag
-            })
-
-        df_real = pd.DataFrame(processed_real_records)
-        # Duplicate high-quality verified real records to give them higher sample weight
-        if real_verified_count > 0:
-            df_verified_boost = df_real[df_real["data_source"] == "REAL_VERIFIED"]
-            df_combined = pd.concat([df_synthetic, df_real, df_verified_boost, df_verified_boost], ignore_index=True)
+        if len(processed_real_records) > 0:
+            df_real = pd.DataFrame(processed_real_records)
+            # Give high-quality human-verified real records boosted sample weighting
+            df_combined = pd.concat([df_synthetic, df_real, df_real], ignore_index=True)
         else:
-            df_combined = pd.concat([df_synthetic, df_real], ignore_index=True)
+            df_combined = df_synthetic
     else:
         df_combined = df_synthetic
 
