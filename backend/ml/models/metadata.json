@@ -1,56 +1,58 @@
 {
-  "model_version": "1.0.1",
-  "trained_at": "2026-09-08T14:24:17.075943",
-  "total_records": 1010,
+  "model_version": "1.0.0",
+  "trained_at": "2026-09-08T14:32:28.427557",
+  "total_records": 1012,
   "real_records": 10,
+  "real_verified_records": 1,
+  "real_unverified_records": 9,
   "synthetic_records": 1000,
-  "accuracy": 0.9455,
-  "f1_score": 0.9455,
-  "precision": 0.9468,
-  "recall": 0.9455,
-  "mae": 0.02,
-  "rmse": 0.07,
-  "r2_score": 1.0,
+  "accuracy": 0.9458,
+  "f1_score": 0.9456,
+  "precision": 0.9497,
+  "recall": 0.9458,
+  "mae": 0.04,
+  "rmse": 0.16,
+  "r2_score": 0.9999,
   "top_features": [
     {
       "feature": "Rule Engine Base Score",
-      "importance": 0.5129
+      "importance": 0.5356
     },
     {
       "feature": "Worker Injury Reported",
-      "importance": 0.0444
+      "importance": 0.0475
     },
     {
       "feature": "Affected Personnel Count",
-      "importance": 0.0392
+      "importance": 0.0373
     },
     {
       "feature": "Detected Hazard Count",
-      "importance": 0.0247
-    },
-    {
-      "feature": "category_PPE Violation",
-      "importance": 0.0163
-    },
-    {
-      "feature": "Text Signal: 'causing'",
-      "importance": 0.0157
+      "importance": 0.0239
     },
     {
       "feature": "Text Signal: 'severe'",
-      "importance": 0.015
+      "importance": 0.0143
     },
     {
-      "feature": "Text Signal: 'near'",
-      "importance": 0.0133
+      "feature": "Text Signal: 'causing'",
+      "importance": 0.0129
+    },
+    {
+      "feature": "category_PPE Violation",
+      "importance": 0.0127
     },
     {
       "feature": "department_Warehouse",
-      "importance": 0.0131
+      "importance": 0.0122
     },
     {
-      "feature": "department_Mining",
-      "importance": 0.0125
+      "feature": "Text Signal: 'worker'",
+      "importance": 0.0122
+    },
+    {
+      "feature": "Text Signal: 'near'",
+      "importance": 0.0115
     }
   ]
 }

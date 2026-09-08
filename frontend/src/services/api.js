@@ -45,6 +45,7 @@ export async function getIncidents(params = {}) {
   if (params.category && params.category !== 'ALL') query.append('category', params.category);
   if (params.severity && params.severity !== 'ALL') query.append('severity', params.severity);
   if (params.status && params.status !== 'ALL') query.append('status', params.status);
+  if (params.review_status && params.review_status !== 'ALL') query.append('review_status', params.review_status);
 
   const response = await fetch(`${API_BASE}/incidents?${query.toString()}`);
   if (!response.ok) {
@@ -73,6 +74,19 @@ export async function updateIncidentStatus(id, status) {
   return await response.json();
 }
 
+export async function reviewIncident(id, reviewData) {
+  const response = await fetch(`${API_BASE}/incidents/${id}/review`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(reviewData)
+  });
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.detail || 'Failed to record safety review');
+  }
+  return await response.json();
+}
+
 export async function deleteIncident(id) {
   const response = await fetch(`${API_BASE}/incidents/${id}`, {
     method: 'DELETE'
@@ -95,7 +109,6 @@ export function getReportDownloadUrl(id) {
   return `${API_BASE}/reports/${id}`;
 }
 
-// ML API Client Methods
 export async function getMLStatus() {
   const response = await fetch(`${API_BASE}/ml/status`);
   if (!response.ok) {

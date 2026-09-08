@@ -10,7 +10,8 @@ from backend.database import get_db
 from backend.models import Incident
 from backend.schemas import (
     AnalyzeRequest, AnalyzeResponse,
-    IncidentCreate, IncidentStatusUpdate, IncidentResponse
+    IncidentCreate, IncidentStatusUpdate, IncidentResponse,
+    IncidentReviewRequest
 )
 from backend.services.risk_engine import analyze_incident_text
 
@@ -43,6 +44,7 @@ def format_incident(inc: Incident) -> dict:
         except: ml_pred = None
 
     created_at_str = inc.created_at.strftime("%Y-%m-%d %H:%M:%S") if isinstance(inc.created_at, datetime.datetime) else str(inc.created_at)
+    reviewed_at_str = inc.reviewed_at.strftime("%Y-%m-%d %H:%M:%S") if isinstance(inc.reviewed_at, datetime.datetime) else (str(inc.reviewed_at) if inc.reviewed_at else None)
 
     return {
         "id": inc.id,
@@ -68,7 +70,13 @@ def format_incident(inc: Incident) -> dict:
         "ml_prediction": ml_pred,
         "ml_confidence": inc.ml_confidence,
         "model_version": inc.model_version or "1.0.0",
-        "rule_based_score": inc.rule_based_score or inc.risk_score
+        "rule_based_score": inc.rule_based_score or inc.risk_score,
+
+        # Human Verification Extensions
+        "verified": bool(inc.verified),
+        "verified_severity": inc.verified_severity,
+        "verified_risk_score": inc.verified_risk_score,
+        "reviewed_at": reviewed_at_str
     }
 
 @router.post("/analyze", response_model=AnalyzeResponse)
@@ -114,7 +122,12 @@ def create_incident(req: IncidentCreate, db: Session = Depends(get_db)):
         ml_prediction=req.ml_prediction,
         ml_confidence=req.ml_confidence,
         model_version=req.model_version or "1.0.0",
-        rule_based_score=req.rule_based_score or req.risk_score
+        rule_based_score=req.rule_based_score or req.risk_score,
+
+        # Human Verification Extensions
+        verified=req.verified or False,
+        verified_severity=req.verified_severity,
+        verified_risk_score=req.verified_risk_score
     )
 
     db.add(incident)
@@ -129,6 +142,7 @@ def get_incidents(
     category: Optional[str] = None,
     severity: Optional[str] = None,
     status: Optional[str] = None,
+    review_status: Optional[str] = None,
     limit: Optional[int] = 100,
     db: Session = Depends(get_db)
 ):
@@ -140,6 +154,12 @@ def get_incidents(
         query = query.filter(Incident.status == status)
     if category and category != "ALL":
         query = query.filter(Incident.category.contains(category))
+    if review_status and review_status != "ALL":
+        if review_status == "VERIFIED":
+            query = query.filter(Incident.verified == True)
+        elif review_status == "PENDING_REVIEW":
+            query = query.filter((Incident.verified == False) | (Incident.verified == None))
+            
     if search:
         s = f"%{search.lower()}%"
         query = query.filter(
@@ -167,6 +187,29 @@ def update_incident_status(incident_id: str, update_req: IncidentStatusUpdate, d
         raise HTTPException(status_code=404, detail="Incident not found")
     
     inc.status = update_req.status
+    db.commit()
+    db.refresh(inc)
+    return format_incident(inc)
+
+@router.put("/incidents/{incident_id}/review", response_model=IncidentResponse)
+def review_incident(incident_id: str, review_req: IncidentReviewRequest, db: Session = Depends(get_db)):
+    inc = db.query(Incident).filter(Incident.id == incident_id).first()
+    if not inc:
+        raise HTTPException(status_code=404, detail="Incident not found")
+
+    inc.verified = review_req.verified
+    if review_req.verified_severity:
+        inc.verified_severity = review_req.verified_severity
+    else:
+        inc.verified_severity = inc.severity
+
+    if review_req.verified_risk_score is not None:
+        inc.verified_risk_score = review_req.verified_risk_score
+    else:
+        inc.verified_risk_score = inc.risk_score
+
+    inc.reviewed_at = datetime.datetime.utcnow()
+
     db.commit()
     db.refresh(inc)
     return format_incident(inc)

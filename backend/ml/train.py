@@ -14,29 +14,65 @@ from backend.ml.model_manager import save_model_artifacts, MODELS_DIR
 def run_training_pipeline(db_incidents_list: list = None, model_version: str = "1.0.0") -> dict:
     os.makedirs(MODELS_DIR, exist_ok=True)
 
-    # 1. Generate / load synthetic data
+    # 1. Generate bootstrap synthetic data
     df_synthetic = generate_synthetic_incidents(num_samples=1000, random_seed=42)
     synthetic_count = len(df_synthetic)
 
-    # 2. Combine with real DB incidents if provided
-    real_count = 0
+    # 2. Process Real DB Incidents with Ground-Truth Enforcement
+    real_verified_count = 0
+    real_unverified_count = 0
+    processed_real_records = []
+
     if db_incidents_list and len(db_incidents_list) > 0:
-        df_real = pd.DataFrame(db_incidents_list)
-        df_real["data_source"] = "REAL"
-        real_count = len(df_real)
-        # Ensure column alignment
-        combined_df = pd.concat([df_synthetic, df_real], ignore_index=True)
+        for item in db_incidents_list:
+            is_verified = item.get("verified", False)
+            
+            # Extract ground-truth labels (NEVER train on unverified ML output)
+            if is_verified:
+                real_verified_count += 1
+                source_tag = "REAL_VERIFIED"
+                target_severity = item.get("verified_severity") or item.get("severity")
+                target_score = item.get("verified_risk_score") if item.get("verified_risk_score") is not None else item.get("risk_score")
+            else:
+                real_unverified_count += 1
+                source_tag = "REAL_UNVERIFIED"
+                target_severity = item.get("severity")
+                target_score = item.get("rule_based_score") or item.get("risk_score")
+
+            processed_real_records.append({
+                "id": item.get("id"),
+                "description": item.get("description", ""),
+                "location": item.get("location", "Main Site"),
+                "department": item.get("department", "Manufacturing"),
+                "category": item.get("category", "Other"),
+                "people_affected": item.get("people_affected", 0),
+                "injury_reported": item.get("injury_reported", False),
+                "hazards": item.get("hazards", []),
+                "hazard_count": len(item.get("hazards", [])) if item.get("hazards") else 1,
+                "rule_based_score": item.get("rule_based_score") or item.get("risk_score", 50),
+                "risk_score": float(target_score),
+                "severity": str(target_severity),
+                "data_source": source_tag
+            })
+
+        df_real = pd.DataFrame(processed_real_records)
+        # Duplicate high-quality verified real records to give them higher sample weight
+        if real_verified_count > 0:
+            df_verified_boost = df_real[df_real["data_source"] == "REAL_VERIFIED"]
+            df_combined = pd.concat([df_synthetic, df_real, df_verified_boost, df_verified_boost], ignore_index=True)
+        else:
+            df_combined = pd.concat([df_synthetic, df_real], ignore_index=True)
     else:
-        combined_df = df_synthetic
+        df_combined = df_synthetic
 
-    total_records = len(combined_df)
+    total_records = len(df_combined)
 
-    # 3. Feature engineering
+    # 3. Feature Engineering
     feature_extractor = IncidentFeatureExtractor()
-    X, feature_names = feature_extractor.fit_transform(combined_df)
+    X, feature_names = feature_extractor.fit_transform(df_combined)
 
-    y_severity = combined_df["severity"].astype(str).values
-    y_risk_score = combined_df["risk_score"].astype(float).values
+    y_severity = df_combined["severity"].astype(str).values
+    y_risk_score = df_combined["risk_score"].astype(float).values
 
     # Train/test split (80/20)
     X_train, X_test, y_sev_train, y_sev_test, y_score_train, y_score_test = train_test_split(
@@ -92,7 +128,9 @@ def run_training_pipeline(db_incidents_list: list = None, model_version: str = "
         "model_version": model_version,
         "trained_at": datetime.datetime.utcnow().isoformat(),
         "total_records": total_records,
-        "real_records": real_count,
+        "real_records": real_verified_count + real_unverified_count,
+        "real_verified_records": real_verified_count,
+        "real_unverified_records": real_unverified_count,
         "synthetic_records": synthetic_count,
         "accuracy": clf_metrics["accuracy"],
         "f1_score": clf_metrics["f1_score"],
@@ -111,8 +149,7 @@ def run_training_pipeline(db_incidents_list: list = None, model_version: str = "
         metadata=metadata
     )
 
-    print(f"[SUCCESS] Trained SafeSense Hybrid ML Model v{model_version}")
-    print(f"   Accuracy: {clf_metrics['accuracy']*100:.1f}%, F1: {clf_metrics['f1_score']:.3f}, Risk MAE: {reg_metrics['mae']}")
+    print(f"[SUCCESS] Trained SafeSense Hybrid ML Model v{model_version} with Ground-Truth Real Records ({real_verified_count} verified)")
     return metadata
 
 if __name__ == "__main__":

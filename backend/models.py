@@ -43,4 +43,10 @@ class Incident(Base):
     model_version = Column(String(20), default="1.0.0")
     rule_based_score = Column(Integer, nullable=True)
 
+    # Human Verification & Safety Review Feedback Loop Extensions
+    verified = Column(Boolean, default=False)
+    verified_severity = Column(String(20), nullable=True)
+    verified_risk_score = Column(Integer, nullable=True)
+    reviewed_at = Column(DateTime, nullable=True)
+
     created_at = Column(DateTime, default=datetime.datetime.utcnow)

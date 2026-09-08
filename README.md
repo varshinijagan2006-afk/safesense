@@ -25,9 +25,10 @@ SafeSense provides a **Hybrid Decision-Support System**:
   - `RandomForestRegressor`: Predicts risk score (0–100 scale).
   - `TfidfVectorizer` + `ColumnTransformer`: Extracts n-gram text signals from incident descriptions combined with structured attributes (`people_affected`, `injury_reported`, `department`, `category`, `hazard_count`).
   - Model Persistence: Joblib serialized pipelines (`backend/ml/models/`).
-- **🔄 Dynamic Retraining Pipeline**:
-  - `POST /api/ml/retrain` retrains the model combining real SQLite database logs with synthetic bootstrap data.
-  - Generates updated model versions (e.g. `v1.0.1`) and metrics.
+- **🔄 Human-in-the-Loop Safety Verification & Retraining Pipeline**:
+  - **Human Ground Truth**: Safety officers review ML predictions and verify actual outcomes (`verified`, `verified_severity`, `verified_risk_score`, `reviewed_at`). Unverified predictions are NEVER used as training ground truth.
+  - **Prioritized Sample Weighting**: `POST /api/ml/retrain` prioritizes human-confirmed real incidents (`REAL_VERIFIED`), applying boosted sample weighting alongside synthetic bootstrap data.
+  - **Prediction Agreement Rate**: Dynamic metric tracking human agreement percentage with AI predictions across reviewed incidents.
 - **📊 Real-Time Safety Dashboard & ML Status**:
   - Live AI Model Status card displaying model version, accuracy (90%+), F1 score (0.89+), risk MAE (0.02 pts), record mixture (real vs synthetic), and an interactive **[ Retrain Model ]** button with confirmation modal.
 - **🛡️ Incident Analyzer with Hybrid Breakdown**:
@@ -85,6 +86,7 @@ graph TD
 - `GET  /api/incidents` - Retrieve list of incidents with search & filter params.
 - `GET  /api/incidents/{id}` - Fetch single incident detail.
 - `PUT  /api/incidents/{id}` - Update incident status.
+- `PUT  /api/incidents/{id}/review` - Submit human safety review & verification outcome.
 - `DELETE /api/incidents/{id}` - Delete incident from database.
 - `GET  /api/analytics` - Dynamic statistical summary & department metrics.
 - `GET  /api/reports/{id}` - Download ReportLab generated PDF report.

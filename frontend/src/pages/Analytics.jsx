@@ -12,7 +12,10 @@ import {
   Wrench,
   ShieldCheck,
   BrainCircuit,
-  Cpu
+  Cpu,
+  UserCheck,
+  Clock,
+  Target
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -74,10 +77,10 @@ export default function Analytics() {
       <div>
         <h1 className="text-2xl font-extrabold text-slate-50 tracking-tight flex items-center gap-2">
           <BarChart3 className="w-6 h-6 text-amber-500" />
-          Safety Analytics &amp; Machine Learning Intelligence
+          Safety Analytics &amp; Human Verification Metrics
         </h1>
         <p className="text-xs text-slate-400 mt-1">
-          Deep-dive statistical analysis, Random Forest model performance, and top learned feature importances
+          Deep-dive statistical analysis, Random Forest model performance, and human safety review agreement tracking
         </p>
       </div>
 
@@ -98,61 +101,61 @@ export default function Analytics() {
           accentColor="red"
         />
         <StatCard
-          title="High Risk Ratio"
-          value={`${data?.high_percentage ?? 24.2}%`}
-          subtext={`${data?.high_incidents ?? 31} high risk incidents`}
-          icon={TrendingUp}
-          accentColor="orange"
+          title="Verified Incidents"
+          value={data?.verified_incidents ?? 4}
+          subtext={`${data?.pending_reviews ?? 6} pending review`}
+          icon={UserCheck}
+          accentColor="emerald"
         />
         <StatCard
-          title="Resolution Rate"
-          value={`${data?.resolution_rate ?? 75.0}%`}
-          subtext={`${data?.resolved_incidents ?? 96} issues resolved`}
-          icon={CheckCircle2}
-          accentColor="emerald"
+          title="Prediction Agreement"
+          value={`${data?.prediction_agreement_rate ?? 88.5}%`}
+          subtext="Human-Reviewed Agreement Rate"
+          icon={Target}
+          accentColor="blue"
         />
         <StatCard
           title="Avg Risk Index"
           value={data?.average_risk_score ?? 64.2}
           subtext="0–100 weighted score"
           icon={Building2}
-          accentColor="blue"
+          accentColor="orange"
         />
       </div>
 
-      {/* ML Performance & Training Breakdown Section */}
+      {/* Human Verification & ML Performance Section */}
       <div className="glass-panel p-5 rounded-2xl border border-amber-500/30 bg-amber-500/5 space-y-4">
         <div className="flex items-center gap-2.5 border-b border-amber-500/20 pb-3">
           <BrainCircuit className="w-5 h-5 text-amber-400" />
-          <h3 className="text-sm font-bold text-slate-100">Machine Learning Model Performance &amp; Record Breakdown</h3>
+          <h3 className="text-sm font-bold text-slate-100">Human Verification &amp; Model Ground-Truth Performance</h3>
           <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30">
-            Version {mlStatus?.model_version || '1.0.0'}
+            Version {mlStatus?.model_version || '1.0.1'}
           </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
-            <span className="text-[10px] text-slate-400 uppercase font-semibold block">Model Accuracy</span>
+            <span className="text-[10px] text-slate-400 uppercase font-semibold block">Human Review Agreement Rate</span>
             <span className="text-2xl font-mono font-bold text-emerald-400">
-              {mlStatus?.accuracy ? `${(mlStatus.accuracy * 100).toFixed(1)}%` : '87.5%'}
+              {data?.prediction_agreement_rate ? `${data.prediction_agreement_rate}%` : '88.5%'}
             </span>
-            <p className="text-[10px] text-slate-500">Cross-validated severity classification</p>
+            <p className="text-[10px] text-slate-500">Correct predictions / total reviewed incidents</p>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
-            <span className="text-[10px] text-slate-400 uppercase font-semibold block">Weighted F1 Score</span>
+            <span className="text-[10px] text-slate-400 uppercase font-semibold block">Human Verified Records</span>
             <span className="text-2xl font-mono font-bold text-emerald-400">
-              {mlStatus?.f1_score || 0.86}
+              {data?.verified_incidents ?? 4}
             </span>
-            <p className="text-[10px] text-slate-500">Balanced precision &amp; recall metric</p>
+            <p className="text-[10px] text-slate-500">Confirmed ground-truth training records</p>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
-            <span className="text-[10px] text-slate-400 uppercase font-semibold block">Risk MAE</span>
+            <span className="text-[10px] text-slate-400 uppercase font-semibold block">Pending Safety Reviews</span>
             <span className="text-2xl font-mono font-bold text-amber-400">
-              &plusmn;{mlStatus?.mae || 5.2} pts
+              {data?.pending_reviews ?? 6}
             </span>
-            <p className="text-[10px] text-slate-500">Mean absolute score prediction error</p>
+            <p className="text-[10px] text-slate-500">Unreviewed incident predictions</p>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">

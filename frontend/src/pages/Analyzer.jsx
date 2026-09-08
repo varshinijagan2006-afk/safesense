@@ -8,18 +8,20 @@ import {
   AlertTriangle, 
   CheckCircle2, 
   Save, 
-  ShieldAlert,
   Loader2,
   FileCheck,
   Zap,
   BrainCircuit,
-  Scale
+  Scale,
+  ThumbsUp,
+  ThumbsDown,
+  ShieldCheck
 } from 'lucide-react';
 
 import RiskGauge from '../components/RiskGauge';
 import SeverityBadge from '../components/SeverityBadge';
 import Toast from '../components/Toast';
-import { analyzeIncident, saveIncident } from '../services/api';
+import { analyzeIncident, saveIncident, reviewIncident } from '../services/api';
 
 const DEMO_SCENARIOS = [
   {
@@ -66,8 +68,17 @@ export default function Analyzer() {
 
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState(null);
+  const [savedId, setSavedId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  // Safety Review State
+  const [reviewChoice, setReviewChoice] = useState(null); // 'correct' or 'incorrect'
+  const [actualSeverity, setActualSeverity] = useState('HIGH');
+  const [actualScore, setActualScore] = useState(75);
+  const [savingReview, setSavingReview] = useState(false);
+  const [reviewSaved, setReviewSaved] = useState(false);
+
   const [toast, setToast] = useState(null);
 
   const handleAnalyze = async (e) => {
@@ -77,6 +88,9 @@ export default function Analyzer() {
     setAnalyzing(true);
     setResult(null);
     setSaved(false);
+    setSavedId(null);
+    setReviewChoice(null);
+    setReviewSaved(false);
 
     try {
       const data = await analyzeIncident({
@@ -88,6 +102,8 @@ export default function Analyzer() {
         date_time: dateTime
       });
       setResult(data);
+      setActualSeverity(data.severity || 'HIGH');
+      setActualScore(data.risk_score || 75);
     } catch (err) {
       setToast({ message: err.message || 'Unable to analyze incident. Please try again.', type: 'error' });
     } finally {
@@ -117,7 +133,6 @@ export default function Analyzer() {
         injury_reported: injuryReported,
         status: 'Pending',
 
-        // Hybrid AI Extensions
         data_source: 'REAL',
         ml_prediction: {
           ml_predicted_score: result.ml_predicted_score,
@@ -125,15 +140,42 @@ export default function Analyzer() {
         },
         ml_confidence: result.ml_confidence,
         model_version: '1.0.0',
-        rule_based_score: result.rule_based_score
+        rule_based_score: result.rule_based_score,
+        verified: false
       });
 
       setSaved(true);
+      setSavedId(savedRes.id);
       setToast({ message: `Incident ${savedRes.id} saved to database!`, type: 'success' });
     } catch (err) {
       setToast({ message: err.message || 'Failed to save incident', type: 'error' });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSaveReview = async () => {
+    if (!savedId && !saved) {
+      // If not saved yet, save first
+      await handleSave();
+    }
+    const idToReview = savedId;
+    if (!idToReview) return;
+
+    setSavingReview(true);
+    try {
+      const isCorrect = reviewChoice === 'correct';
+      await reviewIncident(idToReview, {
+        verified: isCorrect,
+        verified_severity: isCorrect ? result.severity : actualSeverity,
+        verified_risk_score: isCorrect ? result.risk_score : Number(actualScore)
+      });
+      setReviewSaved(true);
+      setToast({ message: 'Safety review recorded successfully.', type: 'success' });
+    } catch (err) {
+      setToast({ message: err.message || 'Failed to record review', type: 'error' });
+    } finally {
+      setSavingReview(false);
     }
   };
 
@@ -154,7 +196,7 @@ export default function Analyzer() {
           AI Incident Analyzer
         </h1>
         <p className="text-xs text-slate-400 mt-1">
-          Submit workplace incident descriptions for real-time explainable hybrid risk assessment (60% Rule Policy + 40% Random Forest ML)
+          Submit workplace incident descriptions for real-time explainable hybrid risk assessment and human safety verification
         </p>
       </div>
 
@@ -437,45 +479,8 @@ export default function Analyzer() {
                 </p>
               </div>
 
-              {/* Actions Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Immediate */}
-                <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-red-400 flex items-center gap-1">
-                    Immediate Safety Actions
-                  </h4>
-                  <ul className="space-y-1.5 text-xs text-slate-300">
-                    {result.immediate_actions.map((act, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <span className="w-4 h-4 rounded bg-red-500/10 text-red-400 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
-                          {i + 1}
-                        </span>
-                        <span>{act}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Preventive */}
-                <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1">
-                    Preventive Safety Actions
-                  </h4>
-                  <ul className="space-y-1.5 text-xs text-slate-300">
-                    {result.preventive_actions.map((act, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <span className="w-4 h-4 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
-                          {i + 1}
-                        </span>
-                        <span>{act}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-
               {/* Save Button Bar */}
-              <div className="pt-2 flex justify-end">
+              <div className="flex justify-end">
                 <button
                   onClick={handleSave}
                   disabled={saving || saved}
@@ -488,7 +493,7 @@ export default function Analyzer() {
                   {saved ? (
                     <>
                       <FileCheck className="w-4 h-4" />
-                      <span>Saved to SQLite (Tagged as REAL Data)</span>
+                      <span>Saved to SQLite Database</span>
                     </>
                   ) : (
                     <>
@@ -497,6 +502,142 @@ export default function Analyzer() {
                     </>
                   )}
                 </button>
+              </div>
+
+              {/* SAFETY REVIEW & HUMAN VERIFICATION CARD */}
+              <div className="p-5 rounded-2xl bg-[#090D16] border border-amber-500/30 space-y-4 shadow-xl">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-5 h-5 text-amber-400" />
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-100">SAFETY REVIEW &amp; HUMAN VERIFICATION</h3>
+                      <p className="text-[11px] text-slate-400">Validate AI model predictions to create human-confirmed ground truth for future retraining</p>
+                    </div>
+                  </div>
+                  {reviewSaved && (
+                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      Verified
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-xs bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                  <div>
+                    <span className="text-[10px] text-slate-400 uppercase font-semibold block">ML Prediction</span>
+                    <span className="font-bold text-amber-400">{result.ml_severity || result.severity}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 uppercase font-semibold block">ML Model Confidence</span>
+                    <span className="font-mono font-bold text-slate-200">
+                      {result.ml_confidence ? `${Math.round(result.ml_confidence * 100)}%` : `${result.confidence}%`}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-xs font-bold text-slate-200 block">
+                    Was this AI risk prediction correct according to site safety evaluation?
+                  </label>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setReviewChoice('correct');
+                        setActualSeverity(result.severity);
+                        setActualScore(result.risk_score);
+                      }}
+                      className={`py-2.5 px-3 rounded-xl text-xs font-bold border flex items-center justify-center gap-2 transition-all ${
+                        reviewChoice === 'correct'
+                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-md'
+                          : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border-slate-800'
+                      }`}
+                    >
+                      <ThumbsUp className="w-4 h-4 text-emerald-400" />
+                      <span>Prediction Correct</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setReviewChoice('incorrect')}
+                      className={`py-2.5 px-3 rounded-xl text-xs font-bold border flex items-center justify-center gap-2 transition-all ${
+                        reviewChoice === 'incorrect'
+                          ? 'bg-red-500/20 text-red-300 border-red-500/50 shadow-md'
+                          : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border-slate-800'
+                      }`}
+                    >
+                      <ThumbsDown className="w-4 h-4 text-red-400" />
+                      <span>Prediction Incorrect</span>
+                    </button>
+                  </div>
+
+                  {/* Expandable Form if Prediction Incorrect */}
+                  {reviewChoice === 'incorrect' && (
+                    <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-3 animate-fade-in">
+                      <h4 className="text-xs font-bold text-slate-200">Specify Verified Ground-Truth Outcome</h4>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-[10px] font-semibold uppercase text-slate-400 block mb-1">
+                            Actual Severity
+                          </label>
+                          <select
+                            value={actualSeverity}
+                            onChange={(e) => setActualSeverity(e.target.value)}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 font-medium"
+                          >
+                            <option value="LOW">LOW</option>
+                            <option value="MEDIUM">MEDIUM</option>
+                            <option value="HIGH">HIGH</option>
+                            <option value="CRITICAL">CRITICAL</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="text-[10px] font-semibold uppercase text-slate-400 block mb-1">
+                            Actual Risk Score (0–100)
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={actualScore}
+                            onChange={(e) => setActualScore(e.target.value)}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 font-mono font-bold"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {reviewChoice && (
+                    <div className="pt-2 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={handleSaveReview}
+                        disabled={savingReview || reviewSaved}
+                        className={`px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
+                          reviewSaved
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                            : 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 text-slate-950 shadow-md shadow-amber-500/20'
+                        }`}
+                      >
+                        {reviewSaved ? (
+                          <>
+                            <CheckCircle2 className="w-4 h-4" />
+                            <span>Safety Review Verified &amp; Saved</span>
+                          </>
+                        ) : (
+                          <>
+                            <Save className="w-4 h-4" />
+                            <span>{savingReview ? 'Saving Review...' : 'SAVE REVIEW'}</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}

@@ -27,7 +27,6 @@ def migrate_sqlite_schema():
         return
 
     with engine.connect() as conn:
-        # Check columns in incidents table
         res = conn.execute(text("PRAGMA table_info(incidents);")).fetchall()
         existing_cols = {row[1] for row in res} if res else set()
 
@@ -37,7 +36,11 @@ def migrate_sqlite_schema():
                 ("ml_prediction", "TEXT"),
                 ("ml_confidence", "FLOAT"),
                 ("model_version", "VARCHAR(20) DEFAULT '1.0.0'"),
-                ("rule_based_score", "INTEGER")
+                ("rule_based_score", "INTEGER"),
+                ("verified", "BOOLEAN DEFAULT 0"),
+                ("verified_severity", "VARCHAR(20)"),
+                ("verified_risk_score", "INTEGER"),
+                ("reviewed_at", "DATETIME")
             ]
 
             for col_name, col_type in new_cols:

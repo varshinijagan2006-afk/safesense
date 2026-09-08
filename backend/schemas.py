@@ -58,6 +58,16 @@ class IncidentCreate(BaseModel):
     model_version: Optional[str] = "1.0.0"
     rule_based_score: Optional[int] = None
 
+    # Human Verification Extensions
+    verified: Optional[bool] = False
+    verified_severity: Optional[str] = None
+    verified_risk_score: Optional[int] = None
+
+class IncidentReviewRequest(BaseModel):
+    verified: bool
+    verified_severity: Optional[str] = None
+    verified_risk_score: Optional[int] = None
+
 class IncidentStatusUpdate(BaseModel):
     status: str
 
@@ -86,6 +96,12 @@ class IncidentResponse(BaseModel):
     ml_confidence: Optional[float] = None
     model_version: Optional[str] = "1.0.0"
     rule_based_score: Optional[int] = None
+
+    # Human Verification Extensions
+    verified: Optional[bool] = False
+    verified_severity: Optional[str] = None
+    verified_risk_score: Optional[int] = None
+    reviewed_at: Optional[str] = None
 
     class Config:
         from_attributes = True

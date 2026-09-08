@@ -2,13 +2,14 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { 
   History as HistoryIcon, 
   Search, 
-  Filter, 
   ArrowUpDown, 
   Eye, 
   Trash2, 
   RefreshCw,
   SlidersHorizontal,
-  AlertCircle
+  AlertCircle,
+  ShieldCheck,
+  Clock
 } from 'lucide-react';
 
 import SeverityBadge from '../components/SeverityBadge';
@@ -24,6 +25,7 @@ export default function History() {
   const [severityFilter, setSeverityFilter] = useState('ALL');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [reviewFilter, setReviewFilter] = useState('ALL');
   const [sortOrder, setSortOrder] = useState('desc');
 
   const [selectedIncident, setSelectedIncident] = useState(null);
@@ -52,6 +54,9 @@ export default function History() {
         if (severityFilter !== 'ALL' && item.severity !== severityFilter) return false;
         if (statusFilter !== 'ALL' && item.status !== statusFilter) return false;
         if (categoryFilter !== 'ALL' && !item.category.includes(categoryFilter)) return false;
+        if (reviewFilter === 'VERIFIED' && !item.verified) return false;
+        if (reviewFilter === 'PENDING' && item.verified) return false;
+
         if (search.trim()) {
           const s = search.toLowerCase();
           const matchId = item.id.toLowerCase().includes(s);
@@ -67,7 +72,7 @@ export default function History() {
         if (sortOrder === 'desc') return b.risk_score - a.risk_score;
         return a.risk_score - b.risk_score;
       });
-  }, [incidents, search, severityFilter, categoryFilter, statusFilter, sortOrder]);
+  }, [incidents, search, severityFilter, categoryFilter, statusFilter, reviewFilter, sortOrder]);
 
   const handleDelete = async (id) => {
     if (!window.confirm(`Are you sure you want to delete incident ${id}?`)) return;
@@ -93,7 +98,7 @@ export default function History() {
             Incident History Log
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Searchable repository of all analyzed workplace incidents and safety logs
+            Searchable repository of all analyzed workplace incidents, safety logs, and human verification status
           </p>
         </div>
 
@@ -113,7 +118,7 @@ export default function History() {
           Filter &amp; Search Controls
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
           {/* Keyword Search */}
           <div className="relative">
             <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -124,6 +129,19 @@ export default function History() {
               onChange={(e) => setSearch(e.target.value)}
               className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500"
             />
+          </div>
+
+          {/* Review Status Filter */}
+          <div>
+            <select
+              value={reviewFilter}
+              onChange={(e) => setReviewFilter(e.target.value)}
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-amber-400 border-amber-500/30 focus:outline-none focus:border-amber-500 font-bold"
+            >
+              <option value="ALL">Review: All Statuses</option>
+              <option value="VERIFIED">Verified</option>
+              <option value="PENDING">Pending Review</option>
+            </select>
           </div>
 
           {/* Severity Filter */}
@@ -176,9 +194,9 @@ export default function History() {
             onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
             className="w-full py-2 px-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-200 text-xs font-semibold flex items-center justify-between transition-colors"
           >
-            <span className="text-slate-400">Risk Score:</span>
+            <span className="text-slate-400">Score:</span>
             <span className="flex items-center gap-1 font-mono text-amber-400">
-              {sortOrder === 'desc' ? 'Highest First' : 'Lowest First'}
+              {sortOrder === 'desc' ? 'Highest' : 'Lowest'}
               <ArrowUpDown className="w-3.5 h-3.5" />
             </span>
           </button>
@@ -195,10 +213,10 @@ export default function History() {
                 <th className="p-3.5">Date</th>
                 <th className="p-3.5">Category</th>
                 <th className="p-3.5">Location</th>
-                <th className="p-3.5">Department</th>
                 <th className="p-3.5 text-center">Risk Score</th>
                 <th className="p-3.5">Severity</th>
-                <th className="p-3.5">Status</th>
+                <th className="p-3.5">Review Status</th>
+                <th className="p-3.5">Incident Status</th>
                 <th className="p-3.5 text-right">Actions</th>
               </tr>
             </thead>
@@ -225,7 +243,6 @@ export default function History() {
                     <td className="p-3.5 text-slate-400">{inc.created_at.slice(0, 10)}</td>
                     <td className="p-3.5 font-medium">{inc.category}</td>
                     <td className="p-3.5 text-slate-400">{inc.location}</td>
-                    <td className="p-3.5 text-slate-400">{inc.department}</td>
                     <td className="p-3.5 text-center font-mono font-bold text-slate-100">
                       {inc.risk_score}
                     </td>
@@ -233,10 +250,23 @@ export default function History() {
                       <SeverityBadge severity={inc.severity} />
                     </td>
                     <td className="p-3.5">
+                      {inc.verified ? (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 inline-flex items-center gap-1">
+                          <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                          Verified
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/30 inline-flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-amber-400" />
+                          Pending Review
+                        </span>
+                      )}
+                    </td>
+                    <td className="p-3.5">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${
                         inc.status === 'Resolved' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' :
                         inc.status === 'Under Investigation' ? 'bg-sky-500/10 text-sky-400 border-sky-500/30' :
-                        'bg-amber-500/10 text-amber-300 border-amber-500/30'
+                        'bg-slate-800 text-slate-400 border-slate-700'
                       }`}>
                         {inc.status}
                       </span>
