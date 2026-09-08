@@ -48,12 +48,11 @@ export default function Reports() {
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-extrabold text-slate-50 tracking-tight flex items-center gap-2">
-          <FileText className="w-6 h-6 text-amber-500" />
-          Incident Report Generator
+        <h1 className="text-xl font-bold text-slate-50 tracking-tight flex items-center gap-2">
+          Safety Reports
         </h1>
-        <p className="text-xs text-slate-400 mt-1">
-          Generate and export official PDF Workplace Incident Risk Assessment reports powered by SafeSense ReportLab Engine
+        <p className="text-xs text-slate-400 mt-0.5">
+          Generate and review workplace safety reports.
         </p>
       </div>
 

@@ -191,17 +191,16 @@ export default function Analyzer() {
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-extrabold text-slate-50 tracking-tight flex items-center gap-2">
-          <Cpu className="w-6 h-6 text-amber-500" />
-          AI Incident Analyzer
+        <h1 className="text-xl font-bold text-slate-50 tracking-tight flex items-center gap-2">
+          Report Workplace Incident
         </h1>
-        <p className="text-xs text-slate-400 mt-1">
-          Submit workplace incident descriptions for real-time explainable hybrid risk assessment and human safety verification
+        <p className="text-xs text-slate-400 mt-0.5">
+          Record an incident and assess its workplace safety risk.
         </p>
       </div>
 
       {/* Demo Scenario Quick-Buttons */}
-      <div className="glass-panel p-4 rounded-xl border border-slate-800">
+      <div className="bg-slate-900/90 p-4 rounded-lg border border-slate-800">
         <span className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5 mb-2">
           <Zap className="w-3.5 h-3.5" />
           Quick Test Demo Scenarios
@@ -212,7 +211,7 @@ export default function Analyzer() {
               key={i}
               type="button"
               onClick={() => loadScenario(sc)}
-              className="p-2.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-slate-800 text-left transition-colors group"
+              className="p-2.5 rounded-md bg-slate-950/80 hover:bg-slate-800 border border-slate-800 text-left transition-colors group"
             >
               <div className="text-xs font-semibold text-slate-200 group-hover:text-amber-400 transition-colors truncate">
                 {sc.title}
@@ -225,9 +224,9 @@ export default function Analyzer() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Form Panel (Left) */}
-        <div className="lg:col-span-5 glass-panel p-6 rounded-2xl border border-slate-800 space-y-5">
-          <h2 className="text-sm font-bold text-slate-100 flex items-center gap-2 border-b border-slate-800 pb-3">
-            Incident Details Form
+        <div className="lg:col-span-5 bg-slate-900/90 p-5 rounded-lg border border-slate-800 space-y-4">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200 border-b border-slate-800 pb-2.5">
+            INCIDENT DETAILS
           </h2>
 
           <form onSubmit={handleAnalyze} className="space-y-4">
@@ -349,18 +348,15 @@ export default function Analyzer() {
             <button
               type="submit"
               disabled={analyzing || !description.trim()}
-              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-slate-950 font-bold text-sm shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+              className="w-full py-2.5 px-4 rounded-md bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
             >
               {analyzing ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Analyzing Hybrid Risk Vectors...</span>
+                  <span>Assessing incident risk...</span>
                 </>
               ) : (
-                <>
-                  <Sparkles className="w-4 h-4 stroke-[2.5]" />
-                  <span>Analyze Hybrid Incident</span>
-                </>
+                <span>ASSESS RISK</span>
               )}
             </button>
           </form>
@@ -371,173 +367,212 @@ export default function Analyzer() {
           {!result && !analyzing && (
             <div className="glass-panel p-12 rounded-2xl border border-slate-800 flex flex-col items-center justify-center text-center h-full min-h-[400px]">
               <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 mb-4">
-                <Cpu className="w-8 h-8" />
+                <ShieldCheck className="w-8 h-8 text-amber-500" />
               </div>
-              <h3 className="text-base font-bold text-slate-200">Ready for Hybrid Risk Assessment</h3>
+              <h3 className="text-sm font-bold text-slate-200">No incident assessed yet</h3>
               <p className="text-xs text-slate-400 max-w-sm mt-1">
-                Enter incident details or select a demo scenario on the left, then click "Analyze Hybrid Incident" to launch the rule engine and Random Forest ML predictor.
+                Enter incident details on the left and click ASSESS RISK to launch the safety risk assessment.
               </p>
             </div>
           )}
 
           {analyzing && (
-            <div className="glass-panel p-12 rounded-2xl border border-slate-800 flex flex-col items-center justify-center text-center h-full min-h-[400px]">
-              <Loader2 className="w-10 h-10 text-amber-500 animate-spin mb-4" />
-              <h3 className="text-base font-bold text-slate-200">Running Hybrid AI Evaluation...</h3>
+            <div className="bg-slate-900/90 p-12 rounded-lg border border-slate-800 flex flex-col items-center justify-center text-center h-full min-h-[400px]">
+              <Loader2 className="w-8 h-8 text-amber-500 animate-spin mb-3" />
+              <h3 className="text-sm font-bold text-slate-200">Assessing incident risk...</h3>
               <p className="text-xs text-slate-400 mt-1">
-                Parsing keywords, vectorizing TF-IDF description, predicting Random Forest score &amp; blending 60/40 rule weights...
+                Evaluating keyword safety rules and machine learning risk predictors...
               </p>
             </div>
           )}
 
           {result && !analyzing && (
-            <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-6 animate-fade-in">
+            <div className="bg-slate-900/90 p-5 rounded-lg border border-slate-800 space-y-5">
               {/* Result Header */}
-              <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                 <div>
-                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-500 flex items-center gap-1">
-                    <BrainCircuit className="w-3.5 h-3.5" />
-                    Hybrid AI Assessment Result
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                    SAFETY RISK ASSESSMENT
                   </span>
-                  <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+                  <h2 className="text-base font-bold text-slate-100 mt-0.5">
                     Category: <span className="text-amber-400">{result.category}</span>
                   </h2>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold border uppercase ${
-                    result.prediction_source === 'hybrid'
-                      ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                      : 'bg-sky-500/10 text-sky-400 border-sky-500/30'
-                  }`}>
-                    {result.prediction_source === 'hybrid' ? 'Hybrid (Rule + ML)' : 'Rule Engine Fallback'}
-                  </span>
+                <div className="flex items-center gap-2">
                   <SeverityBadge severity={result.severity} />
                 </div>
               </div>
 
-              {/* Hybrid Score Breakdown Card */}
-              <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                  <Scale className="w-4 h-4 text-amber-400" />
-                  Hybrid Risk Score Breakdown
-                </h4>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="p-3 rounded-lg bg-slate-950/80 border border-slate-800 text-center">
-                    <span className="text-[10px] text-slate-400 uppercase font-semibold block">Rule Policy Base</span>
-                    <span className="text-lg font-mono font-bold text-sky-400">{result.rule_based_score ?? result.risk_score}</span>
-                    <span className="text-[10px] text-slate-500 block">Weight: 60%</span>
+              {/* Visual Focal Point: Risk Score */}
+              <div className="p-4 rounded-lg bg-slate-950/80 border border-slate-800 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Final Risk Score</span>
+                  <div className="flex items-baseline gap-2 mt-1">
+                    <span className="text-4xl font-extrabold text-slate-50 font-mono">{result.risk_score}</span>
+                    <span className="text-xs text-slate-400 font-semibold">/ 100</span>
+                    <span className="ml-2 font-bold text-xs" style={{ color: result.severity === 'CRITICAL' ? '#EF4444' : result.severity === 'HIGH' ? '#F97316' : result.severity === 'MEDIUM' ? '#EAB308' : '#22C55E' }}>
+                      {result.severity}
+                    </span>
                   </div>
+                </div>
 
-                  <div className="p-3 rounded-lg bg-slate-950/80 border border-slate-800 text-center">
-                    <span className="text-[10px] text-slate-400 uppercase font-semibold block">Random Forest ML</span>
-                    <span className="text-lg font-mono font-bold text-amber-400">{result.ml_predicted_score ?? result.risk_score}</span>
-                    <span className="text-[10px] text-slate-500 block">Weight: 40% ({result.ml_severity || result.severity})</span>
-                  </div>
-
-                  <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-center">
-                    <span className="text-[10px] text-amber-400 uppercase font-bold block">Final Blended Score</span>
-                    <span className="text-2xl font-mono font-extrabold text-slate-50">{result.risk_score}</span>
-                    <span className="text-[10px] text-amber-300 block font-semibold">{result.severity}</span>
-                  </div>
+                <div className="text-right">
+                  <span className="text-[10px] font-semibold uppercase text-slate-400 block">Assessment Method</span>
+                  <span className="text-xs font-semibold text-amber-400">Hybrid Safety Assessment</span>
                 </div>
               </div>
 
-              {/* Gauge & Top Metrics */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-900/60 p-4 rounded-xl border border-slate-800">
-                <div className="sm:col-span-1 flex justify-center items-center">
-                  <RiskGauge score={result.risk_score} severity={result.severity} size="large" />
-                </div>
+              {/* Section 8: Hybrid Safety Assessment Comparison */}
+              <div className="p-4 rounded-lg bg-slate-950/60 border border-slate-800 space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                  Hybrid Safety Assessment Breakdown
+                </h4>
                 
-                <div className="sm:col-span-2 space-y-2 flex flex-col justify-center">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Detected Hazards</h4>
-                    <span className="text-[11px] text-slate-400">
-                      ML Confidence: <b className="text-amber-400">{result.ml_confidence ? `${Math.round(result.ml_confidence*100)}%` : `${result.confidence}%`}</b>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-xs">
+                  <div className="p-2.5 rounded bg-slate-900 border border-slate-800">
+                    <span className="text-[10px] text-slate-400 uppercase block font-semibold">Rule-Based Assessment</span>
+                    <span className="text-base font-mono font-bold text-sky-400">{result.rule_based_score ?? result.risk_score}</span>
+                  </div>
+
+                  <div className="p-2.5 rounded bg-slate-900 border border-slate-800">
+                    <span className="text-[10px] text-slate-400 uppercase block font-semibold">ML Prediction</span>
+                    <span className="text-base font-mono font-bold text-amber-400">{result.ml_predicted_score ?? result.risk_score}</span>
+                  </div>
+
+                  <div className="p-2.5 rounded bg-slate-900 border border-slate-800">
+                    <span className="text-[10px] text-slate-400 uppercase block font-semibold">Final Risk Score</span>
+                    <span className="text-base font-mono font-bold text-slate-50">{result.risk_score}</span>
+                  </div>
+
+                  <div className="p-2.5 rounded bg-slate-900 border border-slate-800">
+                    <span className="text-[10px] text-slate-400 uppercase block font-semibold">ML Confidence</span>
+                    <span className="text-base font-mono font-bold text-emerald-400">
+                      {result.ml_confidence ? `${Math.round(result.ml_confidence * 100)}%` : `${result.confidence}%`}
                     </span>
                   </div>
+                </div>
+
+                {/* Expandable Assessment Details */}
+                <details className="text-xs text-slate-400 pt-2 border-t border-slate-800 cursor-pointer">
+                  <summary className="font-semibold text-slate-300 hover:text-amber-400 transition-colors">
+                    Assessment Details
+                  </summary>
+                  <div className="mt-2 space-y-1.5 p-3 rounded bg-slate-900 border border-slate-800 text-[11px]">
+                    <p><b className="text-slate-300">Rule Engine Factors:</b> Keyword domain rules, location hazard weighting, injury multipliers.</p>
+                    <p><b className="text-slate-300">ML Model Information:</b> Scikit-Learn Random Forest Classifier &amp; Regressor trained on historical site records.</p>
+                    <p><b className="text-slate-300">Model Version:</b> {result.model_version || 'v1.0.1'}</p>
+                    <p><b className="text-slate-300">Feature Information:</b> TF-IDF n-gram text signals + structured personnel &amp; hazard attributes.</p>
+                  </div>
+                </details>
+              </div>
+
+              {/* Identified Hazards & Rationale */}
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Identified Hazards</h4>
                   <div className="flex flex-wrap gap-1.5">
                     {result.hazards.map((h, i) => (
-                      <span key={i} className="px-2.5 py-1 rounded-md bg-slate-800 text-slate-200 text-xs font-medium border border-slate-700 flex items-center gap-1">
+                      <span key={i} className="px-2.5 py-1 rounded bg-slate-800 text-slate-200 text-xs font-medium border border-slate-700 flex items-center gap-1">
                         <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" />
                         {h}
                       </span>
                     ))}
                   </div>
                 </div>
+
+                <div className="p-3.5 rounded-lg bg-amber-500/10 border border-amber-500/30 space-y-1">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-amber-400">
+                    Risk Rationale &amp; Explanations
+                  </h4>
+                  <p className="text-xs text-slate-200 leading-relaxed font-normal">
+                    {result.explanation}
+                  </p>
+                </div>
               </div>
 
-              {/* WHY THIS SCORE? Rationale Box */}
-              <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-2">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-                  <AlertTriangle className="w-4 h-4" />
-                  WHY THIS SCORE? (Explainable Hybrid Rationale)
-                </h3>
-                <p className="text-xs text-slate-200 leading-relaxed font-normal">
-                  {result.explanation}
-                </p>
+              {/* Actions & Prevention Checklists */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-3.5 rounded-lg bg-slate-950/60 border border-slate-800 space-y-2">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300">Immediate Actions</h4>
+                  <ul className="space-y-1 text-xs text-slate-300">
+                    {result.immediate_actions.map((act, idx) => (
+                      <li key={idx} className="flex items-start gap-1.5">
+                        <span className="text-amber-400 font-bold">•</span>
+                        <span>{act}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="p-3.5 rounded-lg bg-slate-950/60 border border-slate-800 space-y-2">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300">Preventive Actions</h4>
+                  <ul className="space-y-1 text-xs text-slate-300">
+                    {result.preventive_actions.map((act, idx) => (
+                      <li key={idx} className="flex items-start gap-1.5">
+                        <span className="text-emerald-400 font-bold">•</span>
+                        <span>{act}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
 
               {/* Save Button Bar */}
-              <div className="flex justify-end">
+              <div className="flex justify-end pt-2 border-t border-slate-800">
                 <button
                   onClick={handleSave}
                   disabled={saving || saved}
-                  className={`px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 shadow-lg transition-all ${
+                  className={`px-4 py-2 rounded-md font-bold text-xs flex items-center gap-2 transition-colors ${
                     saved
                       ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
-                      : 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/20'
+                      : 'bg-amber-500 hover:bg-amber-400 text-slate-950'
                   }`}
                 >
                   {saved ? (
                     <>
                       <FileCheck className="w-4 h-4" />
-                      <span>Saved to SQLite Database</span>
+                      <span>Saved to Incident History</span>
                     </>
                   ) : (
                     <>
                       <Save className="w-4 h-4" />
-                      <span>{saving ? 'Saving...' : 'Save Incident to History'}</span>
+                      <span>{saving ? 'Saving...' : 'Save Incident'}</span>
                     </>
                   )}
                 </button>
               </div>
 
-              {/* SAFETY REVIEW & HUMAN VERIFICATION CARD */}
-              <div className="p-5 rounded-2xl bg-[#090D16] border border-amber-500/30 space-y-4 shadow-xl">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <div className="flex items-center gap-2">
-                    <ShieldCheck className="w-5 h-5 text-amber-400" />
-                    <div>
-                      <h3 className="text-sm font-bold text-slate-100">SAFETY REVIEW &amp; HUMAN VERIFICATION</h3>
-                      <p className="text-[11px] text-slate-400">Validate AI model predictions to create human-confirmed ground truth for future retraining</p>
-                    </div>
-                  </div>
-                  {reviewSaved && (
-                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      Verified
-                    </span>
-                  )}
+              {/* Section 9: SAFETY REVIEW */}
+              <div className="p-4 rounded-lg bg-slate-950/90 border border-slate-800 space-y-3">
+                <div className="border-b border-slate-800 pb-2">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200">SAFETY REVIEW</h3>
+                  <p className="text-[11px] text-slate-400">Human verification improves future safety assessments.</p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 text-xs bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                {reviewSaved && (
+                  <div className="p-3 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>✓ Safety review recorded successfully.</span>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-3 text-xs bg-slate-900 p-2.5 rounded border border-slate-800">
                   <div>
                     <span className="text-[10px] text-slate-400 uppercase font-semibold block">ML Prediction</span>
                     <span className="font-bold text-amber-400">{result.ml_severity || result.severity}</span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-400 uppercase font-semibold block">ML Model Confidence</span>
+                    <span className="text-[10px] text-slate-400 uppercase font-semibold block">Confidence</span>
                     <span className="font-mono font-bold text-slate-200">
                       {result.ml_confidence ? `${Math.round(result.ml_confidence * 100)}%` : `${result.confidence}%`}
                     </span>
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <label className="text-xs font-bold text-slate-200 block">
-                    Was this AI risk prediction correct according to site safety evaluation?
+                <div className="space-y-2.5">
+                  <label className="text-xs font-semibold text-slate-200 block">
+                    Was this prediction correct?
                   </label>
 
                   <div className="grid grid-cols-2 gap-3">
@@ -548,34 +583,34 @@ export default function Analyzer() {
                         setActualSeverity(result.severity);
                         setActualScore(result.risk_score);
                       }}
-                      className={`py-2.5 px-3 rounded-xl text-xs font-bold border flex items-center justify-center gap-2 transition-all ${
+                      className={`py-2 px-3 rounded text-xs font-semibold border flex items-center justify-center gap-2 transition-colors ${
                         reviewChoice === 'correct'
-                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-md'
+                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50'
                           : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border-slate-800'
                       }`}
                     >
-                      <ThumbsUp className="w-4 h-4 text-emerald-400" />
-                      <span>Prediction Correct</span>
+                      <ThumbsUp className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>✓ Prediction Correct</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setReviewChoice('incorrect')}
-                      className={`py-2.5 px-3 rounded-xl text-xs font-bold border flex items-center justify-center gap-2 transition-all ${
+                      className={`py-2 px-3 rounded text-xs font-semibold border flex items-center justify-center gap-2 transition-colors ${
                         reviewChoice === 'incorrect'
-                          ? 'bg-red-500/20 text-red-300 border-red-500/50 shadow-md'
+                          ? 'bg-red-500/20 text-red-300 border-red-500/50'
                           : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border-slate-800'
                       }`}
                     >
-                      <ThumbsDown className="w-4 h-4 text-red-400" />
-                      <span>Prediction Incorrect</span>
+                      <ThumbsDown className="w-3.5 h-3.5 text-red-400" />
+                      <span>✕ Prediction Incorrect</span>
                     </button>
                   </div>
 
                   {/* Expandable Form if Prediction Incorrect */}
                   {reviewChoice === 'incorrect' && (
-                    <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-3 animate-fade-in">
-                      <h4 className="text-xs font-bold text-slate-200">Specify Verified Ground-Truth Outcome</h4>
+                    <div className="p-3 rounded bg-slate-900 border border-slate-800 space-y-2.5">
+                      <h4 className="text-xs font-semibold text-slate-200">Actual Incident Severity &amp; Risk Score</h4>
                       
                       <div className="grid grid-cols-2 gap-3">
                         <div>
@@ -585,7 +620,7 @@ export default function Analyzer() {
                           <select
                             value={actualSeverity}
                             onChange={(e) => setActualSeverity(e.target.value)}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 font-medium"
+                            className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-amber-500 font-medium"
                           >
                             <option value="LOW">LOW</option>
                             <option value="MEDIUM">MEDIUM</option>
@@ -604,7 +639,7 @@ export default function Analyzer() {
                             max="100"
                             value={actualScore}
                             onChange={(e) => setActualScore(e.target.value)}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 font-mono font-bold"
+                            className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-amber-500 font-mono font-bold"
                           />
                         </div>
                       </div>
@@ -617,22 +652,19 @@ export default function Analyzer() {
                         type="button"
                         onClick={handleSaveReview}
                         disabled={savingReview || reviewSaved}
-                        className={`px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
+                        className={`px-4 py-2 rounded font-bold text-xs flex items-center gap-2 transition-colors ${
                           reviewSaved
                             ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                            : 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 text-slate-950 shadow-md shadow-amber-500/20'
+                            : 'bg-amber-500 hover:bg-amber-400 text-slate-950'
                         }`}
                       >
                         {reviewSaved ? (
                           <>
                             <CheckCircle2 className="w-4 h-4" />
-                            <span>Safety Review Verified &amp; Saved</span>
+                            <span>Safety Review Saved</span>
                           </>
                         ) : (
-                          <>
-                            <Save className="w-4 h-4" />
-                            <span>{savingReview ? 'Saving Review...' : 'SAVE REVIEW'}</span>
-                          </>
+                          <span>{savingReview ? 'Saving Review...' : 'SAVE REVIEW'}</span>
                         )}
                       </button>
                     </div>

@@ -10,19 +10,10 @@ export default function SeverityBadge({ severity }) {
     LOW: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
   };
 
-  const dots = {
-    CRITICAL: 'bg-red-500 animate-pulse',
-    HIGH: 'bg-orange-500',
-    MEDIUM: 'bg-amber-400',
-    LOW: 'bg-emerald-400',
-  };
-
   const style = badgeStyles[sev] || badgeStyles.LOW;
-  const dot = dots[sev] || dots.LOW;
 
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${style}`}>
-      <span className={`w-2 h-2 rounded-full ${dot}`}></span>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold border ${style}`}>
       {sev}
     </span>
   );
