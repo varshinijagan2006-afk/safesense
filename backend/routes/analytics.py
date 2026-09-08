@@ -23,25 +23,33 @@ def get_analytics(db: Session = Depends(get_db)):
     avg_score = round(sum(i.risk_score for i in incidents) / total_count, 1) if total_count > 0 else 0.0
 
     # Human Verification & Safety Review Metrics
-    verified_count = sum(1 for i in incidents if i.verified is True)
+    verified_incidents = [i for i in incidents if i.verified is True]
+    verified_count = len(verified_incidents)
     pending_review_count = total_count - verified_count
+    total_reviewed = verified_count
 
-    # Calculate Prediction Agreement Rate for reviewed incidents
-    reviewed_incidents = [i for i in incidents if i.reviewed_at is not None or i.verified is True]
-    total_reviewed = len(reviewed_incidents)
-    
     if total_reviewed > 0:
         correct_count = 0
-        for i in reviewed_incidents:
-            v_sev = i.verified_severity or i.severity
-            v_score = i.verified_risk_score if i.verified_risk_score is not None else i.risk_score
-            # Agreement if severity matches or score diff <= 10
-            if v_sev == i.severity or abs(v_score - i.risk_score) <= 10:
+        for i in verified_incidents:
+            ml_sev = None
+            if i.ml_prediction:
+                if isinstance(i.ml_prediction, dict):
+                    ml_sev = i.ml_prediction.get("ml_severity")
+                elif isinstance(i.ml_prediction, str):
+                    try:
+                        import json
+                        ml_data = json.loads(i.ml_prediction)
+                        ml_sev = ml_data.get("ml_severity")
+                    except Exception:
+                        pass
+            if not ml_sev:
+                ml_sev = i.severity
+
+            if i.verified_severity == ml_sev:
                 correct_count += 1
         prediction_agreement_rate = round((correct_count / total_reviewed) * 100, 1)
     else:
-        # Default baseline agreement rate for initial demo analytics
-        prediction_agreement_rate = 88.5
+        prediction_agreement_rate = None
 
     # Severity distribution
     severity_distribution = [

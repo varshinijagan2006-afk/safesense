@@ -77,10 +77,10 @@ export default function Analytics() {
       <div>
         <h1 className="text-2xl font-extrabold text-slate-50 tracking-tight flex items-center gap-2">
           <BarChart3 className="w-6 h-6 text-amber-500" />
-          Safety Analytics &amp; Human Verification Metrics
+          Safety Analytics &amp; Review Performance
         </h1>
         <p className="text-xs text-slate-400 mt-1">
-          Deep-dive statistical analysis, Random Forest model performance, and human safety review agreement tracking
+          Operational safety trends, incident patterns and review performance
         </p>
       </div>
 
@@ -88,35 +88,35 @@ export default function Analytics() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard
           title="Total Incidents"
-          value={data?.total_incidents ?? 128}
+          value={data?.total_incidents ?? 0}
           subtext="Logged in system"
           icon={BarChart3}
           accentColor="amber"
         />
         <StatCard
           title="Critical Ratio"
-          value={`${data?.critical_percentage ?? 13.3}%`}
-          subtext={`${data?.critical_incidents ?? 17} critical incidents`}
+          value={`${data?.critical_percentage ?? 0}%`}
+          subtext={`${data?.critical_incidents ?? 0} critical incidents`}
           icon={AlertTriangle}
           accentColor="red"
         />
         <StatCard
           title="Verified Incidents"
-          value={data?.verified_incidents ?? 4}
-          subtext={`${data?.pending_reviews ?? 6} pending review`}
+          value={data?.verified_incidents ?? 0}
+          subtext={`${data?.pending_reviews ?? 0} pending review`}
           icon={UserCheck}
           accentColor="emerald"
         />
         <StatCard
           title="Prediction Agreement"
-          value={`${data?.prediction_agreement_rate ?? 88.5}%`}
-          subtext="Human-Reviewed Agreement Rate"
+          value={data?.prediction_agreement_rate !== null && data?.prediction_agreement_rate !== undefined ? `${data.prediction_agreement_rate}%` : 'N/A'}
+          subtext={data?.prediction_agreement_rate !== null && data?.prediction_agreement_rate !== undefined ? 'Human-Reviewed Agreement Rate' : 'No reviewed incidents yet'}
           icon={Target}
           accentColor="blue"
         />
         <StatCard
           title="Avg Risk Index"
-          value={data?.average_risk_score ?? 64.2}
+          value={data?.average_risk_score ?? 0}
           subtext="0–100 weighted score"
           icon={Building2}
           accentColor="orange"
@@ -127,7 +127,7 @@ export default function Analytics() {
       <div className="glass-panel p-5 rounded-2xl border border-amber-500/30 bg-amber-500/5 space-y-4">
         <div className="flex items-center gap-2.5 border-b border-amber-500/20 pb-3">
           <BrainCircuit className="w-5 h-5 text-amber-400" />
-          <h3 className="text-sm font-bold text-slate-100">Human Verification &amp; Model Ground-Truth Performance</h3>
+          <h3 className="text-sm font-bold text-slate-100">Safety Intelligence Performance</h3>
           <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30">
             Version {mlStatus?.model_version || '1.0.1'}
           </span>
@@ -137,15 +137,17 @@ export default function Analytics() {
           <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
             <span className="text-[10px] text-slate-400 uppercase font-semibold block">Human Review Agreement Rate</span>
             <span className="text-2xl font-mono font-bold text-emerald-400">
-              {data?.prediction_agreement_rate ? `${data.prediction_agreement_rate}%` : '88.5%'}
+              {data?.prediction_agreement_rate !== null && data?.prediction_agreement_rate !== undefined ? `${data.prediction_agreement_rate}%` : 'N/A'}
             </span>
-            <p className="text-[10px] text-slate-500">Correct predictions / total reviewed incidents</p>
+            <p className="text-[10px] text-slate-500">
+              {data?.prediction_agreement_rate !== null && data?.prediction_agreement_rate !== undefined ? 'Correct predictions / total reviewed incidents' : 'No reviewed incidents yet'}
+            </p>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
             <span className="text-[10px] text-slate-400 uppercase font-semibold block">Human Verified Records</span>
             <span className="text-2xl font-mono font-bold text-emerald-400">
-              {data?.verified_incidents ?? 4}
+              {data?.verified_incidents ?? 0}
             </span>
             <p className="text-[10px] text-slate-500">Confirmed ground-truth training records</p>
           </div>
@@ -153,7 +155,7 @@ export default function Analytics() {
           <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
             <span className="text-[10px] text-slate-400 uppercase font-semibold block">Pending Safety Reviews</span>
             <span className="text-2xl font-mono font-bold text-amber-400">
-              {data?.pending_reviews ?? 6}
+              {data?.pending_reviews ?? 0}
             </span>
             <p className="text-[10px] text-slate-500">Unreviewed incident predictions</p>
           </div>
@@ -161,9 +163,9 @@ export default function Analytics() {
           <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
             <span className="text-[10px] text-slate-400 uppercase font-semibold block">Dataset Mixture</span>
             <span className="text-sm font-mono font-bold text-slate-100 block">
-              {mlStatus?.synthetic_records || 1000} Synthetic + {mlStatus?.real_records || 10} Real
+              {mlStatus?.synthetic_records || 1000} Synthetic + {mlStatus?.real_records || 0} Real
             </span>
-            <p className="text-[10px] text-slate-400">Total: {mlStatus?.training_records || 1010} records</p>
+            <p className="text-[10px] text-slate-400">Total: {mlStatus?.training_records || 1000} records</p>
           </div>
         </div>
       </div>
